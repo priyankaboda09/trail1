@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from ai_engine.phase3.question_flow import (
@@ -25,6 +26,7 @@ from models import (
     ProctorEvent,
     Result,
 )
+from routes.common import interview_entry_url
 from routes.dependencies import SessionUser, require_role
 from routes.schemas import InterviewAnswerBody, InterviewEventBody, InterviewStartBody
 from utils.proctoring_cv import analyze_frame, compare_signatures, should_store_periodic
@@ -57,6 +59,16 @@ SUSPICIOUS_TYPES = {
     "warning_issued",
     "pause_enforced",
 }
+
+
+@router.get("/interview/{result_id}")
+def legacy_interview_entry(result_id: int, token: str | None = None) -> RedirectResponse:
+    """Redirect legacy backend interview URLs to the SPA pre-check route."""
+
+    target = interview_entry_url(result_id) or "/"
+    if token:
+        target = f"{target}?token={token}"
+    return RedirectResponse(url=target, status_code=307)
 
 
 def _ordered_questions(db: Session, session_id: int) -> list[InterviewQuestion]:

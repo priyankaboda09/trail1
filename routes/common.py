@@ -21,6 +21,12 @@ def frontend_base_url() -> str:
     return os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 
+def interview_entry_url(result_id: int | None) -> str | None:
+    if not result_id:
+        return None
+    return f"{frontend_base_url()}/interview/{int(result_id)}"
+
+
 def generate_candidate_uid() -> str:
     stamp = datetime.utcnow().strftime("%Y%m%d")
     return f"CAND-{stamp}-{uuid4().hex[:6].upper()}"
@@ -139,7 +145,9 @@ def serialize_result(result: Result | None) -> dict[str, object] | None:
         "shortlisted": bool(result.shortlisted),
         "explanation": result.explanation or {},
         "interview_date": result.interview_date,
-        "interview_link": result.interview_link,
+        # Always expose the current SPA entry route, even if legacy rows still
+        # store an old backend/token URL in app.db.
+        "interview_link": interview_entry_url(result.id),
     }
 
 

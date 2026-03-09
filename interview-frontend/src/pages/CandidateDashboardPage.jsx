@@ -117,6 +117,7 @@ export default function CandidateDashboardPage() {
   const hasResult = Boolean(result);
   const isShortlisted = Boolean(result?.shortlisted);
   const hasInterviewScheduled = Boolean(result?.interview_date);
+  const scheduledInterviewPath = result?.id ? `/interview/${result.id}` : null;
 
   const steps = [
     {
@@ -292,10 +293,10 @@ export default function CandidateDashboardPage() {
               <Link to="/candidate/practice" className="button-link subtle-button">
                 Start local practice
               </Link>
-              {result.interview_date ? (
-                <a href={result.interview_link} target="_blank" rel="noreferrer" className="button-link">
+              {result.interview_date && scheduledInterviewPath ? (
+                <Link to={scheduledInterviewPath} className="button-link">
                   Open Interview
-                </a>
+                </Link>
               ) : null}
             </div>
 

@@ -15,8 +15,8 @@ from routes.common import (
     UPLOAD_DIR,
     ensure_candidate_profile,
     evaluate_resume_for_job,
-    frontend_base_url,
     get_candidate_or_404,
+    interview_entry_url,
     list_active_jds,
     list_available_jobs,
     serialize_result,
@@ -277,7 +277,7 @@ def select_interview_date(
 
     result.interview_token = None
     result.interview_date = payload.interview_date
-    result.interview_link = f"{frontend_base_url()}/interview/{result.id}"
+    result.interview_link = interview_entry_url(result.id)
     db.commit()
 
     candidate = get_candidate_or_404(db, current_user.user_id)
