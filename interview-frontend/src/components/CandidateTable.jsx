@@ -18,7 +18,13 @@ export default function CandidateTable({ candidates, onDeleteCandidate, onSchedu
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {candidates.map((candidate) => (
+          {!candidates.length ? (
+            <tr>
+              <td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
+                No candidates found.
+              </td>
+            </tr>
+          ) : candidates.map((candidate) => (
             <tr key={candidate.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
               <td className="px-6 py-4">
                 <div className="flex items-center">
@@ -34,11 +40,11 @@ export default function CandidateTable({ candidates, onDeleteCandidate, onSchedu
                 <div className="flex items-center">
                   <div className="w-12 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mr-2">
                     <div 
-                      className={`h-full rounded-full ${candidate.resumeScore > 80 ? 'bg-emerald-500' : candidate.resumeScore > 60 ? 'bg-blue-500' : 'bg-yellow-500'}`} 
-                      style={{ width: `${candidate.resumeScore}%` }}
+                      className={`h-full rounded-full ${candidate.resumeScore > 80 ? "bg-emerald-500" : candidate.resumeScore > 60 ? "bg-blue-500" : "bg-yellow-500"}`} 
+                      style={{ width: `${candidate.resumeScore || 0}%` }}
                     />
                   </div>
-                  <span className="text-sm font-semibold">{candidate.resumeScore}%</span>
+                  <span className="text-sm font-semibold">{candidate.resumeScore || 0}%</span>
                 </div>
               </td>
               <td className="px-6 py-4">
@@ -50,7 +56,7 @@ export default function CandidateTable({ candidates, onDeleteCandidate, onSchedu
               <td className="px-6 py-4">
                 <div className="flex items-center space-x-2">
                   <Link 
-                    to={`/hr/candidates/${candidate.uid}`}
+                    to={`/hr/candidates/${candidate.uid || candidate.candidate_uid}`}
                     className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-all"
                   >
                     <Eye size={18} />

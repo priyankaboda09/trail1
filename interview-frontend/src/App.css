@@ -157,6 +157,12 @@ body {
   padding: 0.85rem 1rem;
 }
 
+.alert.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
 .section-grid {
   display: grid;
   gap: 1rem;

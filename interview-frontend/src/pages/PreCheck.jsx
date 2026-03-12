@@ -11,12 +11,38 @@ import {
   Video,
   Settings
 } from "lucide-react";
+import { interviewApi } from "../services/api";
 import { cn } from "../utils/utils";
+
+async function attachPreviewStream(videoElement, stream) {
+  if (!videoElement) return;
+  videoElement.srcObject = stream;
+  videoElement.muted = true;
+  videoElement.playsInline = true;
+
+  try {
+    await videoElement.play();
+  } catch {
+    await new Promise((resolve) => {
+      const timeoutId = window.setTimeout(resolve, 500);
+      videoElement.onloadedmetadata = () => {
+        window.clearTimeout(timeoutId);
+        resolve();
+      };
+    });
+    try {
+      await videoElement.play();
+    } catch {
+      // Keep the srcObject assigned even if autoplay is blocked.
+    }
+  }
+}
 
 export default function PreCheck() {
   const { resultId } = useParams();
   const navigate = useNavigate();
   const videoRef = useRef(null);
+  const streamRef = useRef(null);
   
   const [checks, setChecks] = useState({
     camera: { status: 'pending', label: 'Camera access' },
@@ -25,20 +51,39 @@ export default function PreCheck() {
   });
 
   const [isChecking, setIsChecking] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState("");
 
   const startCheck = async () => {
     setIsChecking(true);
-    
+    setError("");
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      let stream;
+      let micGranted = true;
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        micGranted = false;
       }
+
+      streamRef.current = stream;
+      await attachPreviewStream(videoRef.current, stream);
       setChecks({
         camera: { status: 'granted', label: 'Camera access' },
-        mic: { status: 'granted', label: 'Microphone access' },
+        mic: { status: micGranted ? 'granted' : 'denied', label: 'Microphone access' },
         internet: { status: 'granted', label: 'Internet connection' },
       });
+      if (!micGranted) {
+        setError("Camera preview is active, but microphone permission is blocked. Allow mic access if you want full interview audio support.");
+      }
     } catch {
       setChecks({
         camera: { status: 'denied', label: 'Camera access' },
@@ -50,7 +95,37 @@ export default function PreCheck() {
     }
   };
 
+  React.useEffect(() => {
+    const videoElement = videoRef.current;
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    };
+  }, []);
+
   const allGranted = Object.values(checks).every(c => c.status === 'granted');
+
+  const handleStartInterview = async () => {
+    setStarting(true);
+    setError("");
+    try {
+      await interviewApi.start({
+        result_id: Number(resultId),
+        consent_given: true,
+      });
+      sessionStorage.setItem(`interview-consent:${resultId}`, "true");
+      navigate(`/interview/${resultId}/live`);
+    } catch (startError) {
+      setError(startError.message);
+    } finally {
+      setStarting(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-160px)] flex flex-col items-center justify-center py-12">
@@ -70,6 +145,8 @@ export default function PreCheck() {
               Before we begin, please ensure your camera and microphone are working correctly. This ensures a smooth interview experience.
             </p>
           </div>
+
+          {error ? <p className="alert error">{error}</p> : null}
 
           <div className="space-y-4">
             {Object.entries(checks).map(([key, check]) => (
@@ -108,13 +185,13 @@ export default function PreCheck() {
             </button>
             <button 
               disabled={!allGranted}
-              onClick={() => navigate(`/interview/${resultId}/live`)}
+              onClick={handleStartInterview}
               className={cn(
                 "flex-[1.5] py-4 rounded-2xl font-black flex items-center justify-center space-x-2 transition-all shadow-xl shadow-blue-200 dark:shadow-none",
                 allGranted ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
               )}
             >
-              <span>Start Interview</span>
+              <span>{starting ? "Starting..." : "Start Interview"}</span>
               <Play size={18} fill="currentColor" />
             </button>
           </div>
@@ -123,16 +200,15 @@ export default function PreCheck() {
         {/* Right: Video Preview */}
         <div className="space-y-6">
           <div className="relative aspect-video bg-slate-900 rounded-[32px] overflow-hidden shadow-2xl border-4 border-white dark:border-slate-800">
-            {checks.camera.status === 'granted' ? (
-              <video ref={videoRef} className="w-full h-full object-cover scale-x-[-1]" autoPlay muted playsInline />
-            ) : (
+            <video ref={videoRef} className="w-full h-full object-cover scale-x-[-1]" autoPlay muted playsInline />
+            {checks.camera.status !== 'granted' ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500">
                 <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4">
                   <Video size={32} />
                 </div>
                 <p className="text-sm font-bold uppercase tracking-widest">No Video Feed</p>
               </div>
-            )}
+            ) : null}
             
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center space-x-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />

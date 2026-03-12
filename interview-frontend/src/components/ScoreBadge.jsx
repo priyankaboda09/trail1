@@ -2,6 +2,8 @@ import React from "react";
 import { cn } from "../utils/utils";
 
 export default function ScoreBadge({ score, className }) {
+  const numericScore = Number.isFinite(Number(score)) ? Number(score) : 0;
+
   const getStyles = (val) => {
     if (val >= 80) return "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50";
     if (val >= 60) return "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/50";
@@ -13,10 +15,10 @@ export default function ScoreBadge({ score, className }) {
   return (
     <span className={cn(
       "px-2 py-0.5 rounded-lg text-[10px] font-black border uppercase tracking-wider",
-      getStyles(score),
+      getStyles(numericScore),
       className
     )}>
-      {score > 0 ? `${score}%` : "N/A"}
+      {numericScore > 0 ? `${numericScore}%` : "N/A"}
     </span>
   );
 }

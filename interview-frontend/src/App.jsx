@@ -11,6 +11,7 @@ import HRInterviewListPage from "./pages/HRInterviewListPage";
 import HRInterviewDetailPage from "./pages/HRInterviewDetailPage";
 import HRScoreMatrixPage from "./pages/HRScoreMatrixPage";
 import HRJdManagementPage from "./pages/HRJdManagementPage";
+import HRAnalyticsPage from "./pages/HRAnalyticsPage";
 import CandidateComparisonPage from "./pages/CandidateComparisonPage";
 import CandidateDashboardPage from "./pages/CandidateDashboardPage";
 import PracticeInterviewPage from "./pages/PracticeInterviewPage";
@@ -71,7 +72,7 @@ export default function App() {
           <Route path="hr/interviews/:id" element={<HRInterviewDetailPage />} />
           <Route path="hr/matrix" element={<HRScoreMatrixPage />} />
           <Route path="hr/compare" element={<CandidateComparisonPage />} />
-          <Route path="hr/analytics" element={<FinalResultPage />} />
+          <Route path="hr/analytics" element={<HRAnalyticsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>

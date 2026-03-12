@@ -159,7 +159,7 @@ export default function CandidateComparisonPage() {
                       </div>
                     </td>
                     <td>
-                      <span className={`score-badge ${formatPercent(candidate.score) > "75%" ? "high" : formatPercent(candidate.score) > "50%" ? "medium" : "low"}`}>
+                      <span className={`score-badge ${Number(candidate.score) > 75 ? "high" : Number(candidate.score) > 50 ? "medium" : "low"}`}>
                         {formatPercent(candidate.score)}
                       </span>
                     </td>
